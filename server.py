@@ -35,23 +35,17 @@ def user_list():
 @app.route('/users/<user_id>')
 def show_user(user_id):
 
-    results = []
-    scores = []
     titles = []
+    scores = []
 
     user = User.query.get(user_id)
     ratings = user.ratings
 
     for rating in ratings:
-        movie = rating.movie_id
+        movie_title = rating.movie.title
         score = rating.score
-        results.append(movie)
-        scores.append(score)
-
-    for result in results:
-        movie_id = result
-        movie_title = Movie.query.get(movie_id).title
         titles.append(movie_title)
+        scores.append(score)
 
     zipped_titles_scores = list(zip(titles, scores))
 
