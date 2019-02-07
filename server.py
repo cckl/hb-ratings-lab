@@ -32,25 +32,80 @@ def user_list():
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
+@app.route('/users/<user_id>')
+def show_user(user_id):
+
+    user = User.query.get(user_id)
+
+    return render_template("user_details.html", user=user)
+
+
 @app.route('/register')
 def register_form():
-    """Homepage."""
+    """Register page."""
     return render_template("register_form.html")
+
 
 @app.route('/register', methods=['POST'])
 def register_process():
-    """Homepage."""
+    """Process user registration page."""
 
     email = request.form.get('email')
     password = request.form.get('password')
 
-    if User.query.filter(User.email == email).one():
-        # add action for checking password for existing user
-    else:
-        db.session.add(User(email, password))
-        db.session.commit()
+    db.session.add(User(email=email, password=password))
+    db.session.commit()
 
     return redirect("/")
+
+
+@app.route('/login')
+def login_form():
+    """Login page."""
+
+    return render_template("login_form.html")
+
+
+@app.route('/login', methods=['POST'])
+def login_process():
+    """Process login page."""
+
+    email = request.form.get('email')
+    password = request.form.get('password')    
+
+    # checks for existing user
+    try:
+        user_data = db.session.query(User.user_id, User.email, User.password).filter(User.email == email).one()
+    except:
+        flash('Please create an account.')
+        return redirect('/register')
+    
+    # unpack user data
+    user_id = user_data[0]
+    user_email = user_data[1]
+    user_password = user_data[2]
+
+    # check if input password matches user password in database
+    if password == user_password:
+        session['login'] = user_id
+        flash('Successfully logged in.')
+        return redirect("/")
+    else:
+        flash('Sorry, incorrect password!')
+        return redirect('/login')
+
+    return render_template("login_form.html")
+
+
+@app.route('/logout')
+def logout_process():
+    """Logout user."""
+
+    session['login'] = None
+
+    flash('Successfully logged out')
+    return redirect("/")
+
 
 if __name__ == "__main__":
     # We have to set debug=True here, since it has to be True at the
@@ -63,5 +118,6 @@ if __name__ == "__main__":
 
     # Use the DebugToolbar
     DebugToolbarExtension(app)
+    app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
     app.run(port=5000, host='0.0.0.0')
