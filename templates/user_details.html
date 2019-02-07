@@ -5,11 +5,20 @@
 
   <ul>
       <li>
-          {{ user.age }}
+          Age: {{ user.age }}
       </li>
       <li>
-          {{ user.zipcode }}
+          Zipcode: {{ user.zipcode }}
       </li>
+
+  </ul>
+  <h2>Movie ratings:</h2>
+   <ul>
+    {% for title, score in movie_ratings %}
+      <li>
+          <b>Title:</b> {{ title }} | <b>Score:</b> {{ score }}
+      </li>
+    {% endfor %}
   </ul>
 
 {% endblock %}

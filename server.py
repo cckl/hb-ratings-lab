@@ -3,7 +3,7 @@
 from jinja2 import StrictUndefined
 
 from flask import (Flask, render_template, redirect, request, flash,
-                   session)
+                   session, url_for)
 from flask_debugtoolbar import DebugToolbarExtension
 
 from model import User, Rating, Movie, connect_to_db, db
@@ -35,9 +35,27 @@ def user_list():
 @app.route('/users/<user_id>')
 def show_user(user_id):
 
-    user = User.query.get(user_id)
+    results = []
+    scores = []
+    titles = []
 
-    return render_template("user_details.html", user=user)
+    user = User.query.get(user_id)
+    ratings = user.ratings
+
+    for rating in ratings:
+        movie = rating.movie_id
+        score = rating.score
+        results.append(movie)
+        scores.append(score)
+
+    for result in results:
+        movie_id = result
+        movie_title = Movie.query.get(movie_id).title
+        titles.append(movie_title)
+
+    zipped_titles_scores = list(zip(titles, scores))
+
+    return render_template("user_details.html", user=user, movie_ratings=zipped_titles_scores)
 
 
 @app.route('/register')
@@ -89,7 +107,7 @@ def login_process():
     if password == user_password:
         session['login'] = user_id
         flash('Successfully logged in.')
-        return redirect("/")
+        return redirect(url_for('show_user', user_id=user_id))
     else:
         flash('Sorry, incorrect password!')
         return redirect('/login')
