@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block content %}
+
+  <h2>Movie Details</h2>
+
+  <ul>
+      <li>
+        ID: {{ movie.movie_id }}
+      </li>
+      <li>
+        Title: {{ movie.title }}
+      </li>
+      <li>
+        Release date: {{ movie.released_at }}
+      </li>
+      <li>
+        IMDB: {{ movie.imdb_url }}
+      </li>
+  </ul>
+   
+{% if session['login'] %}
+  <h2>Your current rating:</h2> 
+  {% if user_rating %}
+    <p>{{ user_rating.score }}</p>
+    {% else %}
+      <p>Add your rating below.</p>
+    {% endif %}
+
+  <h2>Add your rating!</h2>
+
+  <form action="/add-rating", method="POST">
+    <input type="hidden" name="movie_id" value="{{ movie.movie_id }}">
+    <select name="rating">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
+    <input type="submit">
+  </form>
+{% endif %}
+
+  <h2>Movie ratings:</h2>
+    <ul>
+    {% for rating in ratings %}
+      <li>
+          <b>Score:</b> {{ rating }}
+      </li>
+    {% endfor %}
+    </ul>
+
+{% endblock %}
