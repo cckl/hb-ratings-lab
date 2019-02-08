@@ -32,6 +32,7 @@ def user_list():
     users = User.query.all()
     return render_template("user_list.html", users=users)
 
+
 @app.route('/users/<user_id>')
 def show_user(user_id):
 
@@ -50,6 +51,54 @@ def show_user(user_id):
     zipped_titles_scores = list(zip(titles, scores))
 
     return render_template("user_details.html", user=user, movie_ratings=zipped_titles_scores)
+
+
+@app.route("/movies")
+def movie_list():
+    """Show list of movies."""
+
+    movies = Movie.query.order_by('title').all()
+    return render_template("movie_list.html", movies=movies)
+
+
+@app.route('/movies/<movie_id>')
+def show_movie(movie_id):
+
+    ratings = []
+
+    movie = Movie.query.filter_by(movie_id=movie_id).options(
+        db.joinedload('ratings')).one()
+
+    for rating in movie.ratings:
+        ratings.append(rating.score)
+
+    # get user rating
+    user_id = session['login']
+    user_rating = Rating.query.filter(Rating.user_id==user_id, Rating.movie_id==movie_id).first()
+
+    return render_template("movie_details.html", ratings=ratings, movie=movie, user_rating=user_rating)
+
+
+@app.route('/add-rating', methods=['POST'])
+def add_rating():
+    """Add rating to movie."""
+
+    score = request.form.get('rating')
+    movie_id = request.form.get('movie_id')
+    user_id = session['login']
+    user_rating = Rating.query.filter(Rating.user_id==user_id, Rating.movie_id==movie_id).first()
+
+    if user_rating:
+        user_rating.score = score
+        flash('Your rating has been updated!')
+    else:
+        new_rating = Rating(movie_id=movie_id, user_id=user_id, score=score)
+        db.session.add(new_rating)
+        flash('Your rating has been added!')
+
+    db.session.commit()
+
+    return redirect(url_for('show_movie', movie_id=movie_id))
 
 
 @app.route('/register')
