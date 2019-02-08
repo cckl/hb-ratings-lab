@@ -8,6 +8,8 @@ from flask_debugtoolbar import DebugToolbarExtension
 
 from model import User, Rating, Movie, connect_to_db, db
 
+from correlation import pearson
+
 app = Flask(__name__)
 
 # Required to use Flask sessions and the debug toolbar
@@ -75,6 +77,26 @@ def show_movie(movie_id):
     # get user rating
     user_id = session['login']
     user_rating = Rating.query.filter(Rating.user_id==user_id, Rating.movie_id==movie_id).first()
+
+    # finding movie ratings in common with user
+    user = User.query.get(user_id)
+    u_ratings = user.ratings
+
+    u_dict = {}
+
+    for rating in u_ratings:
+        u_dict[rating.movie_id] = rating.score
+
+    o_ratings = Rating.query.filter_by(movie_id=movie.movie_id).all()
+    # other_users = [rating.user for rating in o_ratings]
+
+    pairings = []
+    for o_rating in o_ratings:
+        user_score = u_dict.get(o_rating.movie_id)
+        if user_score:
+            pairings.append((user_score, o_rating.score, o_rating.user_id))
+
+    print(pairings)
 
     return render_template("movie_details.html", ratings=ratings, movie=movie, user_rating=user_rating)
 
